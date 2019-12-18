@@ -5,3 +5,7 @@ compiled
 *~
 .stack-work
 02/third-hw.cabal
+
+**/.DS_Store
+.idea
+
