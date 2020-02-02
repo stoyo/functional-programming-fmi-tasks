@@ -8,7 +8,9 @@
          matrix-ref
          set
          place
+         enumerate-interval
          diag
+         secondary-diag
          diags
          map-matrix
          filter-matrix
@@ -16,44 +18,79 @@
          zip-matrix)
 ; the provide "exports" these functions
 
-; 00.
-(define (all? p? xs) void)
+(define (all? p? xs)
+  (or (null? xs)
+      (and (p? (car xs))
+           (all? p? (cdr xs)))))
 
-; 01.
-(define (any? p? xs) void)
+(define (any? p? xs)
+  (not (all? (lambda (x) (not (p? x))) xs)))
 
-; 02.
-(define (concat xss) void)
+(define (concat xss)
+  (apply append xss))
 
-; 03.
-(define (rows xss) void)
+(define (rows xss)
+  xss)
 
-; 04.
-(define (cols xss) void)
+(define (nth-column matrix n)
+  (map (lambda (row)
+         (list-ref row n))
+       matrix))
 
-; 05.
-(define (matrix-ref xss i j) void)
+(define (cols matrix)
+  (define number-of-columns (length (car matrix)))
 
-; 06.
-(define (set xs i x) void)
+  (map (lambda (column-index)
+         (nth-column matrix column-index))
+       (enumerate-interval 0 (- number-of-columns 1))))
 
-; 07.
-(define (place xss i j x) void)
+(define (matrix-ref xss i j)
+  (list-ref (list-ref (rows xss) i) j))
 
-; 08.
-(define (diag xss) void)
+(define (set xs i x)
+  (cond ((null? xs) '())
+        ((= i 0) (cons x (cdr xs)))
+        (else (cons (car xs) (set (cdr xs) (- i 1) x)))))
 
-; 09.
-(define (diags xss) void)
+(define (place xss i j x)
+  (cond ((= i 0)
+         (cons (set (car xss) j x) (cdr xss)))
+        (else
+         (cons (car xss) (place (cdr xss) (- i 1) j x)))))
 
-; 10.
-(define (map-matrix f xss) void)
 
-; 11.
-(define (filter-matrix p? xss) void)
+(define (enumerate-interval a b)
+    (if (> a b)
+        '()
+        (cons a (enumerate-interval (+ a 1) b))))
 
-; 12.
-(define (zip-with f xs ys) void)
+(define (diag xss)
+  (let ((indexes (enumerate-interval 0 (- (length (car xss)) 1))))
+    (map list-ref xss indexes)))
 
-; 13.
-(define (zip-matrix xss yss) void)
+(define (secondary-diag xss)
+  (let ((reversed-indexes (reverse (enumerate-interval 0 (- (length (car xss)) 1)))))
+    (map list-ref xss reversed-indexes)))
+
+(define (diags xss)
+  (list (diag xss) (secondary-diag xss)))
+
+(define (map-matrix f xss)
+  (map
+   (lambda (row)
+     (map f row))
+   xss))
+
+(define (filter-matrix p? xss)
+  (map
+   (lambda (row) (filter p? row))
+   xss))
+
+(define (zip-with f xs ys)
+  (if (or (null? xs)
+          (null? ys))
+      '()
+      (cons (f (car xs) (car ys)) (zip-with f (cdr xs) (cdr ys)))))
+
+(define (zip-matrix xss yss)
+  (map (lambda (xs ys) (zip-with cons xs ys)) xss yss))
