@@ -3,5 +3,10 @@ compiled
 *.dep
 *.zo
 *~
+.stack-work
+02/third-hw.cabal
+03/fourth-hw.cabal
 
 **/.DS_Store
+.idea
+*.iml
